@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rabbit Run — Blockly</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Подключаем Blockly -->
+  <script defer src="https://unpkg.com/blockly@10.4.3/blockly.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🐰 Rabbit Run</div>
+    <div class="level-info">
+      <button id="prevLevel" class="btn" title="Предыдущий">◀</button>
+      <span id="levelTitle">Уровень 1/10</span>
+      <span id="carrotIndicator" class="carrot-indicator"></span>
+      <button id="nextLevel" class="btn" title="Следующий">▶</button>
+    </div>
+    <div class="actions">
+      <button id="runBtn" class="btn primary">Запустить ▶</button>
+      <button id="resetBtn" class="btn">Сброс ⟲</button>
+      <!-- <button id="hintBtn" class="btn outline">Подсказка 💡</button> -->
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Левая часть — игровое поле -->
+    <section class="board-wrap">
+      <div style="position: relative; width: 100%; max-width: 640px; margin: 0 auto;">
+        <div id="board" class="board"></div>
+        <!-- Canvas для эффектов -->
+        <canvas id="fxCanvas"></canvas>
+      </div>
+      <div id="legend" class="legend">
+        <span>🐰 — кролик</span>
+        <span>🚪 — выход</span>
+        <span>🥕 — морковка</span>
+        <span>🧱 — стена</span>
+        <span>▫️ — пусто</span>
+      </div>
+      <div id="goal" class="goal"></div>
+    </section>
+
+    <!-- Правая часть — Blockly -->
+    <section class="work-wrap">
+      <div id="blockly" class="blockly"></div>
+      <div class="limit">Блоков: <span id="used">0</span>/<span id="limit">0</span></div>
+    </section>
+  </main>
+
+  <!-- ✅ исправлено: закрыт тег dialog -->
+  <dialog id="modal">
+    <h3 id="modalTitle">Подсказка</h3>
+    <div id="modalBody"></div>
+    <div class="modal-actions"></div>
+  </dialog>
+
+  <footer class="footer">
+    Сделано с ❤️ для <strong>Kodland</strong> · разработчик: <strong>Andrei Pabiarzhyn</strong> · © 2025
+  </footer>
+
+  <!-- Скрипты -->
+  <script defer src="tasks.js"></script>
+  <script defer src="blocks.js"></script>
+  <script defer src="app.js"></script>
+</body>
+</html>

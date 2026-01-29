@@ -1,0 +1,304 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Верхняя панель */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Кнопки */
+.btn {
+  cursor: pointer;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn:hover {
+  background: #121a2a;
+}
+
+.btn.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn.primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn.outline {
+  background: transparent;
+}
+
+/* Основная раскладка */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* слева поле, справа Blockly */
+  gap: 24px;
+  padding: 16px;
+  height: calc(100vh - 72px);
+}
+
+/* Левая колонка — игровое поле */
+.board-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Игровое поле */
+.board {
+  --size: 6;
+  display: grid;
+  grid-template-columns: repeat(var(--size), 1fr);
+  grid-template-rows: repeat(var(--size), 1fr);
+
+  width: 100%;
+  max-width: 90vmin;   /* поле вписывается в экран */
+  aspect-ratio: 1/1;   /* всегда квадрат */
+  background: #0b1220;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  margin: 0 auto;
+}
+
+/* Клетки */
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+}
+
+.cell .sprite {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  pointer-events: none;
+  position: absolute;   /* ⬅️ фиксируем поверх фона */
+}
+
+.wall { filter: saturate(0.8); }
+
+.rabbit {
+  transition: transform 180ms linear;
+  position: relative;
+  z-index: 2;
+}
+
+.collect { animation: pop .35s ease; }
+
+@keyframes pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 14px;
+  opacity: .85;
+}
+
+.goal {
+  font-size: 14px;
+  opacity: .9;
+}
+
+/* Правая колонка — Blockly */
+.work-wrap {
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  background: #1e293b;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.blockly {
+  width: 100%;
+  height: 100%;
+}
+
+.limit {
+  padding: 6px 10px;
+  font-size: 13px;
+  opacity: .85;
+  background: #0b1220;
+  border-top: 1px solid #1f2937;
+}
+
+/* Подвал */
+.footer {
+  padding: 10px 16px;
+  font-size: 12px;
+  text-align: center;
+  opacity: .7;
+  border-top: 1px solid #1f2937;
+}
+
+/* Модальное окно */
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 20px 30px;
+  background: #1f2937;
+  color: #fff;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+dialog::backdrop {
+  background: rgba(0,0,0,0.6);
+}
+
+#modalTitle {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #facc15; /* жёлтый акцент */
+}
+
+#modalBody p {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+#modalBody img {
+  max-width: 120px;
+  margin: 10px auto;
+  display: block;
+}
+
+dialog form {
+  margin-top: 15px;
+}
+
+dialog button {
+  background: #3b82f6;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+dialog button:hover {
+  background: #2563eb;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Фон Blockly */
+.blocklySvg {
+  background-color: #1e293b !important;
+}
+
+.blocklyMainBackground {
+  stroke: #334155;
+}
+
+/* Морковка взята */
+.collect {
+  animation: carrotPop 0.6s ease forwards;
+}
+
+@keyframes carrotPop {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  40%  { transform: scale(1.3) rotate(-10deg); opacity: 1; }
+  70%  { transform: scale(0.6) rotate(10deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(30deg); opacity: 0; }
+}
+
+#fxCanvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.sprite {
+  display: block;           /* убираем нижний зазор inline-изображений */
+  width: 92%;               /* немного «воздуха» вокруг спрайта */
+  height: 92%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;      /* вписываем в клетку, не вылезая */
+  pointer-events: none;
+}
+
+#modal.win-final #modalTitle {
+  color: #22c55e; /* ярко-зелёный */
+  font-size: 1.6rem;
+}
+
+#modal.win-final #modalBody img {
+  max-width: 160px;
+  margin-top: 15px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+
+
+.carrot-indicator{margin-left:10px;font-weight:700;opacity:.95;}
