@@ -2,10 +2,11 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 body {
@@ -13,38 +14,93 @@ body {
   flex-direction: column;
   background: #0f172a;
   color: #e2e8f0;
+  overflow: hidden;
 }
 
-/* Верхняя панель */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-height: 64px;
   padding: 12px 16px;
   background: #111827;
   border-bottom: 1px solid #1f2937;
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 800;
-  letter-spacing: .3px;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
-.level-info {
+.brand img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.level-info,
+.actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.actions {
+.level-stack {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
-/* Кнопки */
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.level-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.level-dot {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: #172033;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.level-dot.done {
+  background: #16a34a;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.level-dot.active {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.28);
+}
+
 .btn {
   cursor: pointer;
+  min-height: 40px;
   border: 1px solid #334155;
   background: #0b1220;
   color: #e2e8f0;
@@ -66,20 +122,33 @@ body {
   filter: brightness(1.05);
 }
 
-.btn.outline {
-  background: transparent;
+.icon-btn {
+  width: 40px;
+  padding: 8px;
+  font-size: 24px;
+  line-height: 1;
 }
 
-/* Основная раскладка */
+.language-select {
+  min-height: 40px;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-weight: 700;
+}
+
 .layout {
   display: grid;
-  grid-template-columns: 1fr 2fr; /* слева поле, справа Blockly */
+  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.4fr);
   gap: 24px;
+  flex: 1;
+  min-height: 0;
   padding: 16px;
-  height: calc(100vh - 72px);
+  overflow: hidden;
 }
 
-/* Левая колонка — игровое поле */
 .board-wrap {
   display: flex;
   flex-direction: column;
@@ -87,25 +156,29 @@ body {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Игровое поле */
+.board-shell {
+  position: relative;
+  width: 100%;
+  max-width: min(640px, 42vw, calc(100dvh - 230px));
+  margin: 0 auto;
+}
+
 .board {
   --size: 6;
   display: grid;
   grid-template-columns: repeat(var(--size), 1fr);
   grid-template-rows: repeat(var(--size), 1fr);
-
   width: 100%;
-  max-width: 90vmin;   /* поле вписывается в экран */
-  aspect-ratio: 1/1;   /* всегда квадрат */
+  aspect-ratio: 1 / 1;
   background: #0b1220;
   border: 1px solid #1f2937;
-  border-radius: 14px;
-  margin: 0 auto;
+  border-radius: 8px;
 }
 
-/* Клетки */
 .cell {
   position: relative;
   display: flex;
@@ -114,97 +187,133 @@ body {
   background-color: transparent;
 }
 
-.cell .sprite {
-  width: 90%;
-  height: 90%;
+.cell.error-cell {
+  background: rgba(239, 68, 68, 0.38);
+  box-shadow: inset 0 0 0 4px #ef4444, 0 0 18px rgba(239, 68, 68, 0.7);
+  animation: errorPulse 0.5s ease;
+  z-index: 1;
+}
+
+@keyframes errorPulse {
+  0% { transform: scale(0.96); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.cell .sprite,
+.sprite {
+  display: block;
+  width: 92%;
+  height: 92%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   pointer-events: none;
-  position: absolute;   /* ⬅️ фиксируем поверх фона */
+  position: absolute;
 }
 
-.wall { filter: saturate(0.8); }
-
-.rabbit {
-  transition: transform 180ms linear;
-  position: relative;
-  z-index: 2;
+.wall {
+  filter: saturate(0.8);
 }
 
-.collect { animation: pop .35s ease; }
+.collect {
+  animation: carrotPop 0.6s ease forwards;
+}
 
-@keyframes pop {
-  0% { transform: scale(0.7); }
-  60% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+@keyframes carrotPop {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; }
+  40% { transform: scale(1.3) rotate(-10deg); opacity: 1; }
+  70% { transform: scale(0.6) rotate(10deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(30deg); opacity: 0; }
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px 12px;
+  max-width: 640px;
   font-size: 14px;
-  opacity: .85;
+  opacity: 0.85;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 .goal {
+  max-width: 640px;
   font-size: 14px;
-  opacity: .9;
+  line-height: 1.45;
+  text-align: center;
+  opacity: 0.9;
 }
 
-/* Правая колонка — Blockly */
 .work-wrap {
-  border: 1px solid #1f2937;
-  border-radius: 14px;
-  background: #1e293b;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #1e293b;
 }
 
 .blockly {
   width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .limit {
   padding: 6px 10px;
   font-size: 13px;
-  opacity: .85;
+  opacity: 0.85;
   background: #0b1220;
   border-top: 1px solid #1f2937;
 }
 
-/* Подвал */
 .footer {
   padding: 10px 16px;
   font-size: 12px;
   text-align: center;
-  opacity: .7;
+  opacity: 0.7;
   border-top: 1px solid #1f2937;
 }
 
-/* Модальное окно */
 dialog {
+  width: 90%;
+  max-width: 320px;
+  max-height: min(86vh, 560px);
+  overflow: auto;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 20px 30px;
   background: #1f2937;
   color: #fff;
-  max-width: 320px;
-  width: 90%;
   text-align: center;
   animation: fadeIn 0.3s ease-out;
 }
 
 dialog::backdrop {
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 #modalTitle {
+  margin: 0 0 12px;
+  color: #facc15;
   font-size: 1.4rem;
-  font-weight: bold;
-  margin-bottom: 12px;
-  color: #facc15; /* жёлтый акцент */
+  font-weight: 700;
 }
 
 #modalBody p {
@@ -213,13 +322,9 @@ dialog::backdrop {
 }
 
 #modalBody img {
+  display: block;
   max-width: 120px;
   margin: 10px auto;
-  display: block;
-}
-
-dialog form {
-  margin-top: 15px;
 }
 
 dialog button {
@@ -227,9 +332,9 @@ dialog button {
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
-  color: white;
+  color: #fff;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -240,10 +345,9 @@ dialog button:hover {
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.9); }
-  to   { opacity: 1; transform: scale(1); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-/* Фон Blockly */
 .blocklySvg {
   background-color: #1e293b !important;
 }
@@ -252,39 +356,30 @@ dialog button:hover {
   stroke: #334155;
 }
 
-/* Морковка взята */
-.collect {
-  animation: carrotPop 0.6s ease forwards;
+.blocklyToolboxDiv,
+.blocklyFlyout {
+  background: #d8e0ea !important;
 }
 
-@keyframes carrotPop {
-  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
-  40%  { transform: scale(1.3) rotate(-10deg); opacity: 1; }
-  70%  { transform: scale(0.6) rotate(10deg); opacity: 0.8; }
-  100% { transform: scale(0) rotate(30deg); opacity: 0; }
+.blocklyFlyoutBackground {
+  fill: #d8e0ea !important;
+  fill-opacity: 1 !important;
+}
+
+.blocklyScrollbarHandle {
+  fill: #94a3b8 !important;
 }
 
 #fxCanvas {
   position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
+  inset: 0;
   width: 100%;
   height: 100%;
-}
-
-.sprite {
-  display: block;           /* убираем нижний зазор inline-изображений */
-  width: 92%;               /* немного «воздуха» вокруг спрайта */
-  height: 92%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;      /* вписываем в клетку, не вылезая */
   pointer-events: none;
 }
 
 #modal.win-final #modalTitle {
-  color: #22c55e; /* ярко-зелёный */
+  color: #22c55e;
   font-size: 1.6rem;
 }
 
@@ -299,6 +394,117 @@ dialog button:hover {
   50% { transform: translateY(-8px); }
 }
 
+.carrot-indicator {
+  margin-left: 4px;
+  font-weight: 700;
+  opacity: 0.95;
+  white-space: nowrap;
+}
 
+@media (max-height: 760px) and (min-width: 761px) {
+  .topbar {
+    min-height: 54px;
+    padding: 8px 12px;
+  }
 
-.carrot-indicator{margin-left:10px;font-weight:700;opacity:.95;}
+  .layout {
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .board-wrap {
+    gap: 8px;
+  }
+
+  .board-shell {
+    max-width: min(500px, 40vw, calc(100dvh - 190px));
+  }
+
+  .legend {
+    gap: 6px 10px;
+    font-size: 12px;
+  }
+
+  .goal {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .footer {
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .level-info {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    overflow: visible;
+  }
+
+  .board-shell {
+    max-width: min(560px, 92vw);
+  }
+
+  .work-wrap {
+    height: 68dvh;
+    min-height: 480px;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .brand,
+  .actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    flex: 1 1 128px;
+  }
+
+  .icon-btn {
+    flex: 0 0 40px;
+  }
+
+  .layout {
+    padding: 10px;
+  }
+
+  .legend {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .goal {
+    font-size: 13px;
+  }
+
+  .work-wrap {
+    min-height: 560px;
+  }
+
+}

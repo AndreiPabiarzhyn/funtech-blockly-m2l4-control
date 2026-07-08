@@ -2,6 +2,7 @@ let workspace;
 let currentLevel = 0;
 let state;
 let compiled = { program: [], handlers: {}, collisions: {} };
+const completedLevels = new Set();
 
 // используем картинки-спрайты
 const EMOJI = {
@@ -29,25 +30,58 @@ const EXIT_FX_MS = 600;
 
 function $(sel) { return document.querySelector(sel); }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function levels() { return window.LEVELS_RABBIT || []; }
+function resizeBlockly() {
+  if (workspace && window.Blockly?.svgResize) Blockly.svgResize(workspace);
+}
+
+function resetFlyoutView() {
+  if (!workspace || typeof workspace.getFlyout !== 'function') return;
+  const flyout = workspace.getFlyout();
+  if (!flyout) return;
+  if (typeof flyout.setVisible === 'function') flyout.setVisible(true);
+  if (typeof flyout.scrollToStart === 'function') flyout.scrollToStart();
+  resizeBlockly();
+}
 
 /* ============ Blockly ============ */
-function initBlockly() {
+function initBlockly(allowedBlocks) {
   workspace = Blockly.inject('blockly', {
-    toolbox: toolboxXml,
+    toolbox: window.buildToolboxXml ? window.buildToolboxXml(allowedBlocks) : window.toolboxXml,
     trashcan: true,
-    zoom: { startScale: 1.0 },
+    scrollbars: true,
+    zoom: { startScale: 0.9 },
     grid: { spacing: 20, length: 3, colour: '#1f2937', snap: true }
   });
 
-  // один фиксированный стартовый блок
-  const startBlock = workspace.newBlock('when_run');
-  startBlock.initSvg();
-  startBlock.render();
-  startBlock.moveBy(80, 30);
-  startBlock.setDeletable(false);
-  startBlock.setMovable(false);
+  try {
+    const startBlock = workspace.newBlock('when_run');
+    startBlock.initSvg();
+    startBlock.render();
+    startBlock.moveBy(80, 30);
+    startBlock.setDeletable(false);
+    startBlock.setMovable(false);
+  } catch (e) {
+    console.error('Start block failed', e);
+  }
 
-  workspace.addChangeListener(updateLimitCounter);
+  workspace.addChangeListener(() => {
+    updateLimitCounter();
+  });
+  resizeBlockly();
+}
+
+function rebuildBlocklyForLevel(level) {
+  if (workspace) {
+    workspace.dispose();
+    workspace = null;
+  }
+  try {
+    initBlockly(level?.allowedBlocks);
+    resetFlyoutView();
+  } catch (e) {
+    console.error('Blockly init failed', e);
+  }
 }
 
 // === Управление с клавиатуры (для уровней с режимом keyboard) ===
@@ -77,23 +111,22 @@ function attachKeyListenerOnce() {
 
 /* ============ Уровни ============ */
 function loadLevel(idx) {
-  if (idx >= LEVELS_RABBIT.length) {
+  const allLevels = levels();
+  if (!allLevels.length) {
+    console.error('No levels loaded');
+    return;
+  }
+  if (idx >= allLevels.length) {
     showWinModal(true);
     return;
   }
 
   currentLevel = idx;
-  const L = LEVELS_RABBIT[idx];
+  const L = allLevels[idx];
 
   // прячем/показываем блоки под уровень (без разделов, всё в одном toolbox)
   // buildToolboxXml определён в blocks.js
-  try {
-    if (workspace && typeof buildToolboxXml === 'function') {
-      workspace.updateToolbox(buildToolboxXml(L.allowedBlocks));
-    }
-  } catch (e) {
-    console.warn('Toolbox update failed', e);
-  }
+  rebuildBlocklyForLevel(L);
 
   // стопаем интерактив/движущиеся препятствия прошлого уровня
   if (moversTimer) {
@@ -102,9 +135,10 @@ function loadLevel(idx) {
   }
   if (state) state.keyboardActive = false;
   attachKeyListenerOnce();
-  $('#levelTitle').textContent = `Уровень ${idx + 1}/${LEVELS_RABBIT.length}`;
+  $('#levelTitle').textContent = t('level', { current: idx + 1, total: allLevels.length });
   $('#limit').textContent = L.maxBlocks;
   $('#used').textContent = 0;
+  renderLevelProgress();
 
   state = {
     size: L.size,
@@ -119,6 +153,7 @@ function loadLevel(idx) {
     keyboardActive: false,
     bg: L.bg || '#0b1220',
     emotion: null,
+    errorCell: null,
     movers: Array.isArray(L.movers) ? L.movers.map(m => ({ ...m })) : []
   };
 
@@ -143,8 +178,10 @@ function loadLevel(idx) {
   updateCarrotIndicator();
 
   renderBoard();
-  $('#goal').textContent = L.goal;
+  $('#goal').textContent = localized(L.goal);
   clearCode();
+  resetFlyoutView();
+  resizeBlockly();
 }
 
 
@@ -154,10 +191,30 @@ function updateCarrotIndicator() {
   const total = state.totalCarrots || 0;
   const collected = total - (state.carrots || 0);
   if (total > 0) {
-    el.textContent = `🥕 ${collected}/${total}`;
+    el.textContent = `${t('carrot')} ${collected}/${total}`;
   } else {
     el.textContent = '';
   }
+}
+
+function renderLevelProgress() {
+  const el = $('#levelProgress');
+  const allLevels = levels();
+  if (!el || !allLevels.length) return;
+
+  el.innerHTML = '';
+  allLevels.forEach((_, idx) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'level-dot';
+    dot.textContent = String(idx + 1);
+    dot.title = t('level', { current: idx + 1, total: allLevels.length });
+    dot.setAttribute('aria-label', dot.title);
+    if (idx === currentLevel) dot.classList.add('active');
+    if (completedLevels.has(idx)) dot.classList.add('done');
+    dot.addEventListener('click', () => loadLevel(idx));
+    el.appendChild(dot);
+  });
 }
 
 function clearCode() {
@@ -166,6 +223,7 @@ function clearCode() {
   for (const b of all) if (b.type !== 'when_run') b.dispose(false, true);
   compiled = { program: [], handlers: {}, collisions: {} };
   updateLimitCounter();
+  resetFlyoutView();
 }
 
 /* ============ Поле ============ */
@@ -185,6 +243,9 @@ function renderBoard() {
       const ch = state.grid[y][x];
       const cellDiv = document.createElement('div');
       cellDiv.className = 'cell' + (ch === 'W' ? ' wall' : '');
+      if (state.errorCell && state.errorCell.x === x && state.errorCell.y === y) {
+        cellDiv.classList.add('error-cell');
+      }
       cellDiv.dataset.x = x;
       cellDiv.dataset.y = y;
 
@@ -263,7 +324,7 @@ function compile() {
 
 function canUseMoreBlocks() {
   const used = workspace.getAllBlocks(false).filter(b => b.type !== 'when_run').length;
-  return used <= LEVELS_RABBIT[currentLevel].maxBlocks;
+  return used <= levels()[currentLevel].maxBlocks;
 }
 
 /* ============ Команды/действия (общий исполнитель) ============ */
@@ -295,7 +356,7 @@ async function execCommands(cmds, opts = {}) {
 } else if (cmd === 'emotion') {
       await setEmotion(arg);
     } else if (cmd === 'stop') {
-      showFailModal(arg || 'Ты проиграл! 💥');
+      showFailModal(arg || t('youLost'));
       resetToStart();
       break;
     } else if (cmd === 'bg') {
@@ -362,6 +423,16 @@ function entityTypeAt(x, y) {
   return null;
 }
 
+async function flashErrorCell(x, y) {
+  if (!state) return;
+  const inside = x >= 0 && y >= 0 && x < state.size && y < state.size;
+  state.errorCell = inside ? { x, y } : { ...state.rabbit };
+  renderBoard();
+  await sleep(500);
+  state.errorCell = null;
+  renderBoard();
+}
+
 async function handleCollision(type) {
   const cmds = compiled.collisions?.[type];
   // Если обработчик не задан блоками — ничего не происходит
@@ -426,7 +497,7 @@ function tickMovers() {
 async function run() {
   if (state.running) return;
   if (!canUseMoreBlocks()) {
-    showFailModal('Слишком много блоков!');
+    showFailModal(t('tooManyBlocks'));
     return;
   }
   compile();
@@ -460,7 +531,7 @@ async function run() {
     if (cmd === 'move') {
       const ok = await step(arg);
       if (!ok) {
-        showFailModal('Ты упёрся в стену или вышел за поле!');
+        showFailModal(t('wallHit'));
         state.running = false;
         return;
       }
@@ -481,7 +552,11 @@ async function run() {
   // проверяем победу
   const won = checkWin();
   if (!won) {
-    showFailModal('Попробуй ещё раз!');
+    const atExit = (state.rabbit.x === state.exit.x && state.rabbit.y === state.exit.y);
+    const needCarrots = levels()[currentLevel].needCarrots;
+    if (!(atExit && needCarrots && state.carrots > 0)) {
+      showFailModal(t('notAtExit'));
+    }
     // сбросим кролика и морковки
     state.rabbit = { ...state.start };
     state.grid = state.original.map(row => [...row]);
@@ -502,8 +577,14 @@ async function step(dir) {
   const ny = state.rabbit.y + dy;
 
   // границы и стены
-  if (nx < 0 || ny < 0 || nx >= state.size || ny >= state.size) return false;
-  if (state.grid[ny][nx] === 'W') return false;
+  if (nx < 0 || ny < 0 || nx >= state.size || ny >= state.size) {
+    await flashErrorCell(nx, ny);
+    return false;
+  }
+  if (state.grid[ny][nx] === 'W') {
+    await flashErrorCell(nx, ny);
+    return false;
+  }
 
   state.rabbit.x = nx;
   state.rabbit.y = ny;
@@ -546,7 +627,7 @@ async function takeCarrot() {
     renderBoard();
     return true;
   } else {
-    showFailModal('Здесь нет морковки! 🥕❌');
+    showFailModal(t('noCarrot'));
     return false;
   }
 }
@@ -554,22 +635,24 @@ async function takeCarrot() {
 /* ============ Победа/проверка ============ */
 function checkWin() {
   const atExit = (state.rabbit.x === state.exit.x && state.rabbit.y === state.exit.y);
-  const needCarrots = LEVELS_RABBIT[currentLevel].needCarrots;
+  const needCarrots = levels()[currentLevel].needCarrots;
   const allCarrots = (state.carrots === 0);
 
   if (atExit && (!needCarrots || allCarrots)) {
     try { sounds.win.currentTime = 0; sounds.win.play(); } catch {}
     exitFX(state.exit.x, state.exit.y);
+    completedLevels.add(currentLevel);
+    renderLevelProgress();
 
-    // ✅ если это последний (10-й) уровень → финальная победа
-    if (currentLevel === 9) {   // 9, потому что индексация с 0
+    // Финальная победа на последнем уровне.
+    if (currentLevel === levels().length - 1) {
       showWinModal(true);
     } else {
       showWinModal(false);
     }
     return true;
   } else if (atExit && needCarrots && !allCarrots) {
-    showFailModal('Собери все морковки!');
+    showFailModal(t('collectAllCarrots'));
     return false;
   }
   return false;
@@ -634,11 +717,11 @@ function exitFX(cx, cy) {
 function showFailModal(msg) {
   try { sounds.fail.currentTime = 0; sounds.fail.play(); } catch {}
   const dlg = $('#modal');
-  $('#modalTitle').textContent = 'Ошибка';
+  $('#modalTitle').textContent = t('modalError');
   $('#modalBody').innerHTML = `
     <p>${msg}</p>
     <img src="img/fail.png" alt="fail" style="max-width:120px">
-    <div class="modal-actions"><button id="okBtn" class="btn primary">Ок</button></div>
+    <div class="modal-actions"><button id="okBtn" class="btn primary">${t('ok')}</button></div>
   `;
   dlg.showModal();
 
@@ -656,18 +739,18 @@ function showWinModal(final) {
 
   if (final) {
     dlg.classList.add('win-final');
-    $('#modalTitle').textContent = 'Поздравляем! 🏆';
+    $('#modalTitle').textContent = t('modalCongrats');
     $('#modalBody').innerHTML = `
-      <p>Ты прошёл все уровни!</p>
+      <p>${t('allLevelsDone')}</p>
       <img src="img/trophy.png" alt="trophy">
-      <div class="modal-actions"><button id="okBtn" class="btn primary">Ок</button></div>
+      <div class="modal-actions"><button id="okBtn" class="btn primary">${t('ok')}</button></div>
     `;
   } else {
-    $('#modalTitle').textContent = 'Молодец!';
+    $('#modalTitle').textContent = t('modalGood');
     $('#modalBody').innerHTML = `
-      <p>Уровень пройден!</p>
+      <p>${t('levelDone')}</p>
       <img src="img/success.gif" alt="success">
-      <div class="modal-actions"><button id="okBtn" class="btn primary">Ок</button></div>
+      <div class="modal-actions"><button id="okBtn" class="btn primary">${t('ok')}</button></div>
     `;
   }
 
@@ -680,15 +763,53 @@ function showWinModal(final) {
   });
 }
 
+function applyStaticTranslations() {
+  document.title = t('appTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  const prev = $('#prevLevel');
+  const next = $('#nextLevel');
+  if (prev) {
+    prev.title = t('previous');
+    prev.setAttribute('aria-label', t('previous'));
+  }
+  if (next) {
+    next.title = t('next');
+    next.setAttribute('aria-label', t('next'));
+  }
+}
+
+function refreshLanguage(lang) {
+  setLanguage(lang);
+  applyStaticTranslations();
+  if (typeof window.defineRabbitBlocks === 'function') window.defineRabbitBlocks();
+  const levelToReload = currentLevel;
+  if (workspace) {
+    workspace.dispose();
+    workspace = null;
+  }
+  loadLevel(levelToReload);
+}
+
 /* ============ Кнопки/Старт ============ */
 window.addEventListener('DOMContentLoaded', () => {
   fxCanvas = document.getElementById('fxCanvas');
   ctx = fxCanvas.getContext('2d');
 
-  initBlockly();
+  setLanguage(currentLanguage);
+  applyStaticTranslations();
+  const languageSelect = $('#languageSelect');
+  if (languageSelect) {
+    languageSelect.value = currentLanguage;
+    languageSelect.addEventListener('change', (e) => refreshLanguage(e.target.value));
+  }
+
   loadLevel(0);
 
   $('#runBtn').addEventListener('click', run);
+  $('#clearBlocksBtn').addEventListener('click', clearCode);
   $('#resetBtn').addEventListener('click', () => loadLevel(currentLevel));
   //$('#hintBtn').addEventListener('click', () => {
     //const hint = LEVELS_RABBIT[currentLevel].hint || 'Попробуй шаг за шагом.';
@@ -699,9 +820,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (currentLevel > 0) loadLevel(currentLevel - 1);
   });
   $('#nextLevel').addEventListener('click', () => {
-    if (currentLevel < LEVELS_RABBIT.length - 1) loadLevel(currentLevel + 1);
+    if (currentLevel < levels().length - 1) loadLevel(currentLevel + 1);
   });
 
   // при ресайзе браузера пересинхроним canvas с полем
-  window.addEventListener('resize', () => renderBoard());
+  window.addEventListener('resize', () => {
+    renderBoard();
+    resizeBlockly();
+  });
 });
