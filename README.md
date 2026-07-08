@@ -1,88 +1,88 @@
 # Rabbit Run — Blockly
 
-Мини-игра для обучения программированию с помощью **Blockly**. Игрок управляет кроликом, собирает морковки и проходит уровни, составляя программы из визуальных блоков или управляя кроликом с клавиатуры.
+A mini-game for learning programming with **Blockly**. The player controls a rabbit, collects carrots, and completes levels by building programs from visual blocks or controlling the rabbit with the keyboard.
 
-**👉 [Играть на GitHub Pages](https://andreipabiarzhyn.github.io/funtech-blockly-m2l4-control/)**
-
----
-
-## О проекте
-
-Интерактивная обучающая web-игра для детей и начинающих. Состоит из **10 уровней** разной сложности:
-
-- **Уровни 1–4** — режим `program`: составление последовательности команд с циклами.
-- **Уровни 5–7** — режим `keyboard`: управление с клавиатуры через обработчики нажатия стрелок и событий столкновений.
-- **Уровни 8–10** — режим `keyboard` с движущимися вирусами: нужно не только собрать морковки и дойти до выхода, но и избежать столкновения с врагами.
-
-Подходит для уроков по блочному программированию, знакомства с алгоритмами, циклами, обработкой событий.
+**👉 [Play on GitHub Pages](https://andreipabiarzhyn.github.io/funtech-blockly-m2l4-control/)**
 
 ---
 
-## Игровые механики
+## About the project
 
-- **Кролик** — персонаж, которым управляет игрок.
-- **Морковки** — собираемые предметы (нужно собрать все на уровне).
-- **Выход** — финишная точка, нужно дойти до неё.
-- **Стены** — препятствия, их нельзя проходить.
-- **Вирусы** — движущиеся враги, столкновение с ними ведёт к проигрышу.
-- **Друг-робот** — встречается на последнем уровне, на него можно поставить эмоцию радости.
+An interactive educational web game for kids and beginners. It consists of **10 levels** of increasing difficulty:
 
-## Блоки
+- **Levels 1–4** — `program` mode: build a sequence of commands with loops.
+- **Levels 5–7** — `keyboard` mode: keyboard control via arrow key handlers and collision events.
+- **Levels 8–10** — `keyboard` mode with moving viruses: collect all carrots, reach the exit, and avoid enemies.
 
-| Блок | Назначение |
-|------|-----------|
-| `when_run` | Точка входа программы (всегда в начале) |
-| `move_up/down/left/right` | Шаг в заданном направлении |
-| `repeat_times` | Цикл (повторить N раз) |
-| `take_carrot` | Взять морковку |
-| `set_emotion` | Показать эмоцию (радость/грусть) |
-| `set_bg` | Изменить цвет фона |
-| `key_left/right/up/down` | Обработчик нажатия стрелки |
-| `on_collision` | Обработчик столкновения (с вирусом, другом, морковкой) |
-| `stop_game` | Завершить игру (победа/проигрыш) |
+Great for block-based programming lessons, introducing algorithms, loops, and event handling.
 
 ---
 
-## Стек
+## Game mechanics
 
-- **Языки:** JavaScript, CSS, HTML
-- **Визуальный редактор:** Blockly (v10)
-- **Сборка:** без сборщика, чистый браузерный JS
-- **Деплой:** GitHub Pages
+- **Rabbit** — the player character.
+- **Carrots** — collectible items (must collect all on the level).
+- **Exit** — the finish point, must reach it to win.
+- **Walls** — obstacles, cannot be passed through.
+- **Viruses** — moving enemies; colliding with them results in a loss.
+- **Robot friend** — appears on the last level; you can set a happy emotion on it.
+
+## Blocks
+
+| Block | Purpose |
+|-------|---------|
+| `when_run` | Program entry point (always at the start) |
+| `move_up/down/left/right` | Step in the specified direction |
+| `repeat_times` | Loop (repeat N times) |
+| `take_carrot` | Take a carrot |
+| `set_emotion` | Show an emotion (happy/sad) |
+| `set_bg` | Change background color |
+| `key_left/right/up/down` | Arrow key press handler |
+| `on_collision` | Collision handler (virus, friend, carrot) |
+| `stop_game` | End the game (win/lose) |
 
 ---
 
-## Структура проекта
+## Tech stack
+
+- **Languages:** JavaScript, CSS, HTML
+- **Visual editor:** Blockly (v10)
+- **Build:** No bundler, pure browser JS
+- **Deployment:** GitHub Pages
+
+---
+
+## Project structure
 
 ```
-├── index.html        — главная страница
-├── style.css         — стили
-├── app.js            — основная логика игры
-├── blocks.js         — определения Blockly-блоков
-├── tasks.js          — конфигурация всех 10 уровней
-├── i18n.js           — переводы (RU/EN/PL)
+├── index.html        — main page
+├── style.css         — styles
+├── app.js            — game logic
+├── blocks.js         — Blockly block definitions
+├── tasks.js          — all 10 level configurations
+├── i18n.js           — translations (RU/EN/PL)
 ├── libs/
-│   └── blockly.min.js — библиотека Blockly
-├── img/              — спрайты и иконки
-└── sounds/           — звуковые эффекты
+│   └── blockly.min.js — Blockly library
+├── img/              — sprites and icons
+└── sounds/           — sound effects
 ```
 
 ---
 
-## Как запустить локально
+## How to run locally
 
-Открой `index.html` в любом современном браузере — без сервера, без сборки.
+Open `index.html` in any modern browser — no server, no build step needed.
 
-Или используй Live Server в VS Code (например, [Ritwick Dey's Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)).
-
----
-
-## Переводы
-
-Поддерживаются три языка: **русский**, **английский**, **польский**. Переключаются в правом верхнем углу. Язык сохраняется в `localStorage`.
+Or use Live Server in VS Code (e.g., [Ritwick Dey's Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)).
 
 ---
 
-## Автор
+## Translations
 
-Разработчик: **Andrei Pabiarzhyn** · для **Kodland** · © 2025
+Three languages are supported: **Russian**, **English**, **Polish**. Switch in the top-right corner. The language is saved in `localStorage`.
+
+---
+
+## Author
+
+Developer: **Andrei Pabiarzhyn** · for **Kodland** · © 2025
